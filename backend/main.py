@@ -4,9 +4,19 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from backend.routers import usuarios, conductores, buses, rutas, quejas, auth, paradas, incidentes, ubicaciones
 from fastapi.responses import RedirectResponse
+from backend.database.database import engine, Base
 import os
 
 app = FastAPI()
+
+# Crear tablas al iniciar
+@app.on_event("startup")
+def startup():
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Base de datos inicializada correctamente")
+    except Exception as e:
+        print(f"❌ Error al inicializar la base de datos: {e}")
 
 # CORS
 app.add_middleware(
@@ -17,11 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ========== CAMBIOS AQUÍ ==========
 # Obtener rutas absolutas
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # ← CAMBIO: Subir un nivel más
-STATIC_DIR = os.path.join(BASE_DIR, "backend", "static")  # ← CAMBIO: Agregar "backend"
-TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend")  # ← CAMBIO: Cambiar "templates" por "frontend"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STATIC_DIR = os.path.join(BASE_DIR, "backend", "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend")
 
 # Debug
 print(f"📁 BASE_DIR: {BASE_DIR}")
@@ -29,7 +38,6 @@ print(f"📁 Archivos estáticos: {STATIC_DIR}")
 print(f"📁 Templates (frontend): {TEMPLATES_DIR}")
 print(f"📁 ¿Existe static? {os.path.exists(STATIC_DIR)}")
 print(f"📁 ¿Existe frontend? {os.path.exists(TEMPLATES_DIR)}")
-# ==================================
 
 # Archivos estáticos y templates
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
