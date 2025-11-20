@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SmartBus">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- Iconos -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-512.png">
+    <title>Gestión de Buses - SmartBus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .logo h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #5a6268;
+        }
+        
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background: #c82333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .panel-header h2 {
+            color: #333;
+            font-size: 28px;
+        }
+        
+        .btn-add {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-add:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-edit, .btn-delete {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .btn-edit {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .btn-edit:hover {
+            background: #e0a800;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        /* Toggle Switch para Estado */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .slider {
+            background-color: #28a745;
+        }
+
+        .toggle-switch input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        .estado-text {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .estado-text.activo {
+            color: #28a745;
+        }
+
+        .estado-text.inactivo {
+            color: #dc3545;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+        
+        .btn-save {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .btn-save:hover {
+            background: #218838;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-activo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-inactivo {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-conductor {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-sin-conductor {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .horario-info {
+            font-size: 13px;
+            color: #666;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="volverDashboard()">
+            <span>🚌</span>
+            <h1>SmartBus</h1>
+        </div>
+        <div class="header-buttons">
+            <button class="btn btn-back" onclick="volverDashboard()">← Volver al Dashboard</button>
+            <button class="btn btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>🚌 Gestión de Buses</h2>
+                <button class="btn-add" onclick="abrirModalAgregar()">
+                    <span>➕</span> Agregar Bus
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div id="loading" class="loading">
+                    <p>Cargando buses...</p>
+                </div>
+                <table id="tablaBuses" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Placa</th>
+                            <th>Modelo</th>
+                            <th>Capacidad</th>
+                            <th>Horarios</th>
+                            <th>Estado</th>
+                            <th>Conductor</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-buses"></tbody>
+                </table>
+                <div id="noData" class="no-data" style="display: none;">
+                    <p>No hay buses registrados. ¡Agrega el primero!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Agregar Bus</h3>
+                <button class="close-modal" onclick="cerrarModal()">×</button>
+            </div>
+            
+            <form id="formBus">
+                <input type="hidden" id="busId">
+                
+                <div class="form-group">
+                    <label for="placa">Placa *</label>
+                    <input type="text" id="placa" placeholder="Ej: ABC123" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modelo">Modelo *</label>
+                    <input type="text" id="modelo" placeholder="Ej: Mercedes Benz O500" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="capacidad">Capacidad (pasajeros) *</label>
+                    <input type="number" id="capacidad" placeholder="Ej: 45" min="1" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hora_inicio">⏰ Hora de Inicio</label>
+                        <input type="time" id="hora_inicio" placeholder="09:00">
+                        <small style="color: #666; margin-top: 5px; display: block;">
+                            Hora de salida del bus
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="hora_llegada">🏁 Hora de Llegada</label>
+                        <input type="time" id="hora_llegada" placeholder="18:00">
+                        <small style="color: #666; margin-top: 5px; display: block;">
+                            Hora de llegada estimada
+                        </small>
+                    </div>
+                </div>
+
+                <div class="toggle-container">
+                    <span class="toggle-label">Estado del Bus:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="estado" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="estado-text activo" id="estadoText">✓ Activo</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_conductor">Conductor Asignado</label>
+                    <select id="id_conductor">
+                        <option value="">Sin asignar</option>
+                    </select>
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        Solo aparecen conductores disponibles (sin bus asignado)
+                    </small>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn-save" id="btnGuardar">Crear Bus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://192.168.1.8:8000';
+        let editandoBusId = null;
+        let todosConductores = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacion();
+            cargarBuses();
+            configurarToggleEstado();
+        });
+
+        function verificarAutenticacion() {
+            const token = localStorage.getItem('access_token');
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            
+            if (!token || (usuario.rol !== 'admin' && usuario.rol !== 'administrador')) {
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = '/auth';
+            }
+        }
+
+        function configurarToggleEstado() {
+            const estadoCheckbox = document.getElementById('estado');
+            const estadoText = document.getElementById('estadoText');
+
+            estadoCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    estadoText.textContent = '✓ Activo';
+                    estadoText.className = 'estado-text activo';
+                } else {
+                    estadoText.textContent = '✗ Inactivo';
+                    estadoText.className = 'estado-text inactivo';
+                }
+            });
+        }
+
+        function formatearHora(hora) {
+            if (!hora) return 'Sin horario';
+            // Si viene en formato "HH:MM:SS", tomar solo "HH:MM"
+            return hora.substring(0, 5);
+        }
+
+        async function cargarBuses() {
+            const loading = document.getElementById('loading');
+            const tabla = document.getElementById('tablaBuses');
+            const noData = document.getElementById('noData');
+            const tbody = document.getElementById('tbody-buses');
+            
+            try {
+                const response = await fetch(`${API_URL}/buses/`);
+                const buses = await response.json();
+                
+                loading.style.display = 'none';
+                
+                if (buses.length === 0) {
+                    noData.style.display = 'block';
+                    tabla.style.display = 'none';
+                } else {
+                    noData.style.display = 'none';
+                    tabla.style.display = 'table';
+                    
+                    tbody.innerHTML = buses.map(bus => `
+                        <tr>
+                            <td>${bus.id}</td>
+                            <td><strong>${bus.placa}</strong></td>
+                            <td>${bus.modelo}</td>
+                            <td>${bus.capacidad} pasajeros</td>
+                            <td>
+                                <div>⏰ ${formatearHora(bus.hora_inicio)}</div>
+                                <div class="horario-info">🏁 ${formatearHora(bus.hora_llegada)}</div>
+                            </td>
+                            <td>
+                                ${bus.estado 
+                                    ? '<span class="badge badge-activo">✓ Activo</span>'
+                                    : '<span class="badge badge-inactivo">✗ Inactivo</span>'
+                                }
+                            </td>
+                            <td>
+                                ${bus.id_conductor 
+                                    ? '<span class="badge badge-conductor">👨‍✈️ Asignado</span>'
+                                    : '<span class="badge badge-sin-conductor">Sin conductor</span>'
+                                }
+                            </td>
+                            <td class="actions">
+                                <button class="btn-edit" onclick="editarBus(${bus.id})">✏️ Editar</button>
+                                <button class="btn-delete" onclick="eliminarBus(${bus.id}, '${bus.placa}')">🗑️ Eliminar</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar buses:', error);
+                loading.innerHTML = '<p style="color: red;">Error al cargar los buses</p>';
+            }
+        }
+
+        async function cargarConductoresDisponibles(conductorActualId = null) {
+            try {
+                const response = await fetch(`${API_URL}/conductores/`);
+                todosConductores = await response.json();
+                
+                const busesResponse = await fetch(`${API_URL}/buses/`);
+                const buses = await busesResponse.json();
+                const conductoresOcupados = buses
+                    .filter(b => b.id_conductor && b.id_conductor !== conductorActualId)
+                    .map(b => b.id_conductor);
+                
+                const conductoresDisponibles = todosConductores.filter(
+                    c => !conductoresOcupados.includes(c.id)
+                );
+                
+                const select = document.getElementById('id_conductor');
+                select.innerHTML = '<option value="">Sin asignar</option>' + 
+                    conductoresDisponibles.map(conductor => 
+                        `<option value="${conductor.id}">${conductor.nombre} - Lic: ${conductor.licencia}</option>`
+                    ).join('');
+                
+                if (conductorActualId) {
+                    const conductorActual = todosConductores.find(c => c.id === conductorActualId);
+                    if (conductorActual && !conductoresDisponibles.find(c => c.id === conductorActualId)) {
+                        const option = document.createElement('option');
+                        option.value = conductorActual.id;
+                        option.text = `${conductorActual.nombre} - Lic: ${conductorActual.licencia} (Actual)`;
+                        select.add(option);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar conductores:', error);
+            }
+        }
+
+        async function abrirModalAgregar() {
+            editandoBusId = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Bus';
+            document.getElementById('btnGuardar').textContent = 'Crear Bus';
+            document.getElementById('formBus').reset();
+            document.getElementById('busId').value = '';
+            
+            // Establecer estado activo por defecto
+            document.getElementById('estado').checked = true;
+            document.getElementById('estadoText').textContent = '✓ Activo';
+            document.getElementById('estadoText').className = 'estado-text activo';
+            
+            await cargarConductoresDisponibles();
+            document.getElementById('modal').classList.add('active');
+        }
+
+        async function editarBus(id) {
+            try {
+                const response = await fetch(`${API_URL}/buses/${id}`);
+                const bus = await response.json();
+                
+                editandoBusId = id;
+                document.getElementById('modalTitle').textContent = 'Editar Bus';
+                document.getElementById('btnGuardar').textContent = 'Actualizar Bus';
+                document.getElementById('busId').value = id;
+                document.getElementById('placa').value = bus.placa;
+                document.getElementById('modelo').value = bus.modelo;
+                document.getElementById('capacidad').value = bus.capacidad;
+                
+                // Configurar horarios
+                document.getElementById('hora_inicio').value = bus.hora_inicio ? formatearHora(bus.hora_inicio) : '';
+                document.getElementById('hora_llegada').value = bus.hora_llegada ? formatearHora(bus.hora_llegada) : '';
+                
+                // Configurar estado
+                const estadoCheckbox = document.getElementById('estado');
+                const estadoText = document.getElementById('estadoText');
+                estadoCheckbox.checked = bus.estado;
+                if (bus.estado) {
+                    estadoText.textContent = '✓ Activo';
+                    estadoText.className = 'estado-text activo';
+                } else {
+                    estadoText.textContent = '✗ Inactivo';
+                    estadoText.className = 'estado-text inactivo';
+                }
+                
+                await cargarConductoresDisponibles(bus.id_conductor);
+                document.getElementById('id_conductor').value = bus.id_conductor || '';
+                
+                document.getElementById('modal').classList.add('active');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar los datos del bus');
+            }
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('formBus').reset();
+            editandoBusId = null;
+        }
+
+        document.getElementById('formBus').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('placa', document.getElementById('placa').value);
+            formData.append('modelo', document.getElementById('modelo').value);
+            formData.append('capacidad', document.getElementById('capacidad').value);
+            formData.append('estado', document.getElementById('estado').checked);
+            
+            // Agregar horarios si están definidos
+            const horaInicio = document.getElementById('hora_inicio').value;
+            const horaLlegada = document.getElementById('hora_llegada').value;
+            
+            if (horaInicio) {
+                formData.append('hora_inicio', horaInicio);
+            }
+            
+            if (horaLlegada) {
+                formData.append('hora_llegada', horaLlegada);
+            }
+            
+            const conductorId = document.getElementById('id_conductor').value;
+            if (conductorId) {
+                formData.append('id_conductor', conductorId);
+            }
+            
+            try {
+                let response;
+                let mensaje;
+                
+                if (editandoBusId) {
+                    response = await fetch(`${API_URL}/buses/${editandoBusId}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                    mensaje = 'Bus actualizado exitosamente';
+                } else {
+                    response = await fetch(`${API_URL}/buses/`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    mensaje = 'Bus creado exitosamente';
+                }
+                
+                if (response.ok) {
+                    alert(mensaje);
+                    cerrarModal();
+                    cargarBuses();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'No se pudo guardar el bus'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar el bus');
+            }
+        });
+
+        async function eliminarBus(id, placa) {
+            if (!confirm(`¿Estás seguro de eliminar el bus ${placa}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/buses/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Bus eliminado exitosamente');
+                    cargarBuses();
+                } else {
+                    alert('Error al eliminar el bus');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar el bus');
+            }
+        }
+
+        function volverDashboard() {
+            window.location.href = '/dashboard/admin';
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('usuario');
+                window.location.href = '/auth';
+            }
+        }
+    </script>
+        <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado:', registration);
+                    })
+                    .catch(error => {
+                        console.log('❌ Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

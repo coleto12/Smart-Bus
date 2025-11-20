@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SmartBus">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- Iconos -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-512.png">
+    <title>Incidentes en Carretera - SmartBus</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .logo h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #5a6268;
+        }
+        
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background: #c82333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .panel-header h2 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .refresh-indicator {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-indicator.updating {
+            color: #667eea;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Mapa */
+        #map {
+            width: 100%;
+            height: 600px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .map-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .map-info p {
+            color: #004085;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-box .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-box.reten .number { color: #007bff; }
+        .stat-box.accidente .number { color: #dc3545; }
+        .stat-box.trafico .number { color: #ffc107; }
+
+        .stat-box .label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .stat-box .icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        /* Lista de incidentes */
+        .incidentes-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .incidente-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #dc3545;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .incidente-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .incidente-item.reten_policia {
+            border-left-color: #007bff;
+        }
+
+        .incidente-item.accidente_vial {
+            border-left-color: #dc3545;
+        }
+
+        .incidente-item.mucho_trafico {
+            border-left-color: #ffc107;
+        }
+
+        .incidente-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .incidente-tipo {
+            font-weight: bold;
+            color: #333;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .incidente-tiempo {
+            font-size: 12px;
+            color: #666;
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .incidente-tiempo.reciente {
+            background: #d4edda;
+            color: #155724;
+            font-weight: 600;
+        }
+
+        .incidente-info {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .incidente-coords {
+            font-size: 12px;
+            color: #999;
+            font-family: monospace;
+            margin-top: 5px;
+        }
+
+        .btn-view-map {
+            width: 100%;
+            padding: 8px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-view-map:hover {
+            background: #5568d3;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .no-data .icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        /* Estilos para marcadores del mapa */
+        .marker-icon {
+            background: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 3px solid;
+        }
+
+        .marker-reten { border-color: #007bff; }
+        .marker-accidente { border-color: #dc3545; }
+        .marker-trafico { border-color: #ffc107; }
+
+        /* Popup personalizado */
+        .custom-popup {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .popup-header {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .popup-info {
+            font-size: 13px;
+            color: #666;
+            margin: 4px 0;
+        }
+
+        .popup-time {
+            background: #fff3cd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #856404;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        .popup-time.recent {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .leyenda {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 15px;
+        }
+
+        .leyenda-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .leyenda-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .leyenda-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid;
+            font-size: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state .emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .empty-state h3 {
+            color: #28a745;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="volverDashboard()">
+            <span>⚠️</span>
+            <h1>SmartBus - Incidentes en Carretera</h1>
+        </div>
+        <div class="header-buttons">
+            <button class="btn btn-back" onclick="volverDashboard()">← Volver al Dashboard</button>
+            <button class="btn btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content-grid">
+            <!-- Mapa de incidentes -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>🗺️ Mapa de Incidentes</h2>
+                    <div class="refresh-indicator" id="refreshIndicator">
+                        <span>🔄</span>
+                        <span id="refreshText">Actualizando...</span>
+                    </div>
+                </div>
+                
+                <div class="map-info">
+                    <p>📍 <strong>Visualiza los incidentes activos en tiempo real</strong></p>
+                    <p>ℹ️ Los incidentes se actualizan automáticamente cada 30 segundos</p>
+                    <p>⏱️ Los incidentes más antiguos de 1 hora se eliminan automáticamente</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box reten">
+                        <div class="icon">🚔</div>
+                        <div class="number" id="countReten">0</div>
+                        <div class="label">Retenes</div>
+                    </div>
+                    <div class="stat-box accidente">
+                        <div class="icon">🚗💥</div>
+                        <div class="number" id="countAccidente">0</div>
+                        <div class="label">Accidentes</div>
+                    </div>
+                    <div class="stat-box trafico">
+                        <div class="icon">🚦</div>
+                        <div class="number" id="countTrafico">0</div>
+                        <div class="label">Tráfico</div>
+                    </div>
+                </div>
+
+                <div id="map"></div>
+
+                <div class="leyenda">
+                    <div class="leyenda-title">📌 Leyenda</div>
+                    <div class="leyenda-item">
+                        <div class="leyenda-icon" style="border-color: #007bff; background: white;">🚔</div>
+                        <span>Retén de Policía</span>
+                    </div>
+                    <div class="leyenda-item">
+                        <div class="leyenda-icon" style="border-color: #dc3545; background: white;">🚗💥</div>
+                        <span>Accidente Vial</span>
+                    </div>
+                    <div class="leyenda-item">
+                        <div class="leyenda-icon" style="border-color: #ffc107; background: white;">🚦</div>
+                        <span>Mucho Tráfico</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de incidentes -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>📋 Incidentes Activos</h2>
+                </div>
+                
+                <div id="loading" class="loading">
+                    <p>Cargando incidentes...</p>
+                </div>
+                
+                <div id="incidentesList" class="incidentes-list" style="display: none;">
+                    <!-- Lista dinámica -->
+                </div>
+                
+                <div id="noData" class="no-data" style="display: none;">
+                    <div class="empty-state">
+                        <span class="emoji">✅</span>
+                        <h3>¡Todo despejado!</h3>
+                        <p>No hay incidentes activos en este momento</p>
+                        <p style="font-size: 14px; margin-top: 10px; color: #999;">
+                            Las carreteras están libres de incidentes reportados
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        const API_URL = '192.168.1.8:8000';
+        let map;
+        let incidenteMarkers = [];
+        let ultimaActualizacion = null;
+
+        // Límites de Colombia
+        const COLOMBIA_BOUNDS = [
+            [-4.5, -79.0],
+            [13.5, -66.8]
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacion();
+            inicializarMapa();
+            cargarIncidentes();
+            
+            // Auto-refresh cada 30 segundos
+            setInterval(() => {
+                cargarIncidentes(true);
+            }, 30000);
+        });
+
+        function verificarAutenticacion() {
+            const token = localStorage.getItem('access_token');
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            
+            if (!token || usuario.rol !== 'pasajero') {
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = '/auth';
+            }
+        }
+
+        function inicializarMapa() {
+            map = L.map('map', {
+                center: [4.5709, -74.2973], // Bogotá, Colombia
+                zoom: 6,
+                minZoom: 6,
+                maxZoom: 18,
+                maxBounds: COLOMBIA_BOUNDS,
+                maxBoundsViscosity: 1.0
+            });
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        function getIconoIncidente(tipo) {
+            let emoji, borderColor, className;
+            
+            switch(tipo) {
+                case 'reten_policia':
+                    emoji = '🚔';
+                    borderColor = '#007bff';
+                    className = 'marker-reten';
+                    break;
+                case 'accidente_vial':
+                    emoji = '🚗💥';
+                    borderColor = '#dc3545';
+                    className = 'marker-accidente';
+                    break;
+                case 'mucho_trafico':
+                    emoji = '🚦';
+                    borderColor = '#ffc107';
+                    className = 'marker-trafico';
+                    break;
+                default:
+                    emoji = '⚠️';
+                    borderColor = '#6c757d';
+                    className = 'marker-icon';
+            }
+
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div class="marker-icon ${className}" style="border-color: ${borderColor};">${emoji}</div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40]
+            });
+        }
+
+        function getEmojiTipo(tipo) {
+            const emojis = {
+                'reten_policia': '🚔',
+                'accidente_vial': '🚗💥',
+                'mucho_trafico': '🚦'
+            };
+            return emojis[tipo] || '⚠️';
+        }
+
+        function getNombreTipo(tipo) {
+            const nombres = {
+                'reten_policia': 'Retén de Policía',
+                'accidente_vial': 'Accidente Vial',
+                'mucho_trafico': 'Mucho Tráfico'
+            };
+            return nombres[tipo] || tipo;
+        }
+
+        function limpiarMapa() {
+            incidenteMarkers.forEach(marker => map.removeLayer(marker));
+            incidenteMarkers = [];
+        }
+
+        function formatearTiempo(fechaISO) {
+            if (!fechaISO) return { texto: 'Fecha no disponible', clase: '' };
+            
+            const fecha = new Date(fechaISO);
+            const ahora = new Date();
+            const diferencia = ahora - fecha;
+            
+            const minutos = Math.floor(diferencia / 60000);
+            const horas = Math.floor(diferencia / 3600000);
+            
+            let texto = '';
+            let clase = '';
+            
+            if (minutos < 1) {
+                texto = 'Hace un momento';
+                clase = 'reciente';
+            } else if (minutos < 60) {
+                texto = `Hace ${minutos} min`;
+                clase = minutos < 15 ? 'reciente' : '';
+            } else if (horas < 24) {
+                texto = `Hace ${horas} hora${horas > 1 ? 's' : ''}`;
+                clase = '';
+            } else {
+                texto = fecha.toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                clase = '';
+            }
+            
+            return { texto, clase };
+        }
+
+        function formatearHora(fechaISO) {
+            if (!fechaISO) return '--:--';
+            
+            const fecha = new Date(fechaISO);
+            return fecha.toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        async function cargarIncidentes(esActualizacion = false) {
+            const loading = document.getElementById('loading');
+            const lista = document.getElementById('incidentesList');
+            const noData = document.getElementById('noData');
+            const refreshIndicator = document.getElementById('refreshIndicator');
+            const refreshText = document.getElementById('refreshText');
+            
+            if (esActualizacion) {
+                refreshIndicator.classList.add('updating');
+                refreshText.textContent = 'Actualizando...';
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/incidentes/?activos_solo=true`);
+                const incidentes = await response.json();
+                
+                loading.style.display = 'none';
+                limpiarMapa();
+                
+                // Actualizar contadores
+                const countReten = incidentes.filter(i => i.tipo_incidente === 'reten_policia').length;
+                const countAccidente = incidentes.filter(i => i.tipo_incidente === 'accidente_vial').length;
+                const countTrafico = incidentes.filter(i => i.tipo_incidente === 'mucho_trafico').length;
+                
+                document.getElementById('countReten').textContent = countReten;
+                document.getElementById('countAccidente').textContent = countAccidente;
+                document.getElementById('countTrafico').textContent = countTrafico;
+                
+                if (incidentes.length === 0) {
+                    noData.style.display = 'block';
+                    lista.style.display = 'none';
+                } else {
+                    noData.style.display = 'none';
+                    lista.style.display = 'block';
+                    
+                    // Ordenar por fecha (más recientes primero)
+                    incidentes.sort((a, b) => new Date(b.fecha_reporte) - new Date(a.fecha_reporte));
+                    
+                    lista.innerHTML = incidentes.map(incidente => {
+                        const tiempo = formatearTiempo(incidente.fecha_reporte);
+                        const hora = formatearHora(incidente.fecha_reporte);
+                        
+                        return `
+                            <div class="incidente-item ${incidente.tipo_incidente}" onclick="centrarEnIncidente(${incidente.latitud}, ${incidente.longitud})">
+                                <div class="incidente-header">
+                                    <div class="incidente-tipo">
+                                        ${getEmojiTipo(incidente.tipo_incidente)}
+                                        ${getNombreTipo(incidente.tipo_incidente)}
+                                    </div>
+                                    <div class="incidente-tiempo ${tiempo.clase}">
+                                        ⏱️ ${tiempo.texto}
+                                    </div>
+                                </div>
+                                <div class="incidente-info">
+                                    🕐 Reportado a las ${hora}
+                                </div>
+                                ${incidente.usuario ? `<div class="incidente-info">👤 Por: ${incidente.usuario.nombre}</div>` : ''}
+                                ${incidente.descripcion ? `<div class="incidente-info">📝 ${incidente.descripcion}</div>` : ''}
+                                <div class="incidente-coords">📍 ${incidente.latitud.toFixed(6)}, ${incidente.longitud.toFixed(6)}</div>
+                                <button class="btn-view-map">
+                                    🔍 Ver en Mapa
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    // Agregar marcadores al mapa
+                    incidentes.forEach(incidente => {
+                        const icon = getIconoIncidente(incidente.tipo_incidente);
+                        const tiempo = formatearTiempo(incidente.fecha_reporte);
+                        const hora = formatearHora(incidente.fecha_reporte);
+                        
+                        const popupContent = `
+                            <div class="custom-popup">
+                                <div class="popup-header">
+                                    ${getEmojiTipo(incidente.tipo_incidente)} ${getNombreTipo(incidente.tipo_incidente)}
+                                </div>
+                                <div class="popup-info">🕐 ${hora} (${tiempo.texto})</div>
+                                ${incidente.descripcion ? `<div class="popup-info">📝 ${incidente.descripcion}</div>` : ''}
+                                ${incidente.usuario ? `<div class="popup-info">👤 ${incidente.usuario.nombre}</div>` : ''}
+                                <div class="popup-info">📍 ${incidente.latitud.toFixed(6)}, ${incidente.longitud.toFixed(6)}</div>
+                            </div>
+                        `;
+                        
+                        const marker = L.marker([incidente.latitud, incidente.longitud], { icon })
+                            .addTo(map)
+                            .bindPopup(popupContent);
+                        
+                        incidenteMarkers.push(marker);
+                    });
+
+                    // Ajustar vista si hay incidentes
+                    if (incidentes.length > 0) {
+                        const bounds = L.latLngBounds(incidentes.map(i => [i.latitud, i.longitud]));
+                        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+                    }
+                }
+                
+                ultimaActualizacion = new Date();
+                
+                if (esActualizacion) {
+                    setTimeout(() => {
+                        refreshIndicator.classList.remove('updating');
+                        refreshText.textContent = 'Última actualización: ' + ultimaActualizacion.toLocaleTimeString('es-ES');
+                    }, 500);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                loading.innerHTML = '<p style="color: red;">Error al cargar incidentes</p>';
+                
+                if (esActualizacion) {
+                    refreshIndicator.classList.remove('updating');
+                    refreshText.textContent = 'Error al actualizar';
+                }
+            }
+        }
+
+        function centrarEnIncidente(lat, lng) {
+            map.setView([lat, lng], 14, {
+                animate: true,
+                duration: 1
+            });
+            
+            // Encontrar y abrir el popup del marcador
+            incidenteMarkers.forEach(marker => {
+                const markerPos = marker.getLatLng();
+                if (Math.abs(markerPos.lat - lat) < 0.0001 && Math.abs(markerPos.lng - lng) < 0.0001) {
+                    setTimeout(() => {
+                        marker.openPopup();
+                    }, 500);
+                }
+            });
+        }
+
+        function volverDashboard() {
+            window.location.href = '/dashboard/pasajero';
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('usuario');
+                window.location.href = '/auth';
+            }
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado:', registration);
+                    })
+                    .catch(error => {
+                        console.log('❌ Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

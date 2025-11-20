@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SmartBus">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- Iconos -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-512.png">
+    <title>Buses Activos - SmartBus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .logo h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #5a6268;
+        }
+        
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background: #c82333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .panel-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .panel-header h2 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .panel-header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .buses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .bus-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .bus-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        
+        .bus-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .bus-icon {
+            font-size: 48px;
+        }
+        
+        .bus-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .bus-placa {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .bus-modelo {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .bus-horario {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .horario-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .horario-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .horario-icon {
+            font-size: 18px;
+        }
+
+        .horario-label {
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .horario-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .bus-info {
+            border-top: 1px solid #f0f0f0;
+            padding-top: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-item strong {
+            color: #333;
+        }
+        
+        .info-icon {
+            font-size: 18px;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .no-data-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .no-data h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #667eea;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .sin-horario {
+            color: #999;
+            font-style: italic;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo" onclick="volverDashboard()">
+            <span>🚌</span>
+            <h1>SmartBus</h1>
+        </div>
+        <div class="header-buttons">
+            <button class="btn btn-back" onclick="volverDashboard()">← Volver al Dashboard</button>
+            <button class="btn btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>🚌 Buses Activos</h2>
+                <p>Visualiza todos los buses que están actualmente en operación</p>
+            </div>
+
+            <div class="filter-section">
+                <input 
+                    type="text" 
+                    class="filter-input" 
+                    id="searchInput" 
+                    placeholder="🔍 Buscar por placa, modelo o ruta..."
+                    onkeyup="filtrarBuses()"
+                >
+            </div>
+
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Cargando buses activos...</p>
+            </div>
+
+            <div id="busesGrid" class="buses-grid" style="display: none;"></div>
+
+            <div id="noData" class="no-data" style="display: none;">
+                <div class="no-data-icon">🚌</div>
+                <h3>No hay buses activos</h3>
+                <p>Actualmente no hay buses en operación</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://192.168.1.8:8000';
+        let busesData = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacion();
+            cargarBusesActivos();
+        });
+
+        function verificarAutenticacion() {
+            const token = localStorage.getItem('access_token');
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            
+            if (!token) {
+                alert('Debes iniciar sesión');
+                window.location.href = '/auth';
+            }
+        }
+
+        function formatearHora(hora) {
+            if (!hora) return null;
+            // Si viene en formato "HH:MM:SS", tomar solo "HH:MM"
+            return hora.substring(0, 5);
+        }
+
+        async function cargarBusesActivos() {
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('busesGrid');
+            const noData = document.getElementById('noData');
+            
+            try {
+                const response = await fetch(`${API_URL}/buses/activos`);
+                busesData = await response.json();
+                
+                loading.style.display = 'none';
+                
+                if (busesData.length === 0) {
+                    noData.style.display = 'block';
+                    grid.style.display = 'none';
+                } else {
+                    noData.style.display = 'none';
+                    grid.style.display = 'grid';
+                    renderizarBuses(busesData);
+                }
+            } catch (error) {
+                console.error('Error al cargar buses:', error);
+                loading.innerHTML = '<p style="color: red;">Error al cargar los buses</p>';
+            }
+        }
+
+        function renderizarBuses(buses) {
+            const grid = document.getElementById('busesGrid');
+            
+            grid.innerHTML = buses.map(bus => {
+                const horaInicio = formatearHora(bus.hora_inicio);
+                const horaLlegada = formatearHora(bus.hora_llegada);
+                const tieneHorarios = horaInicio || horaLlegada;
+
+                return `
+                    <div class="bus-card">
+                        <div class="bus-card-header">
+                            <div class="bus-icon">🚌</div>
+                            <div class="bus-status">✓ Activo</div>
+                        </div>
+                        
+                        <div class="bus-placa">${bus.placa}</div>
+                        <div class="bus-modelo">${bus.modelo}</div>
+                        
+                        ${tieneHorarios ? `
+                            <div class="bus-horario">
+                                ${horaInicio ? `
+                                    <div class="horario-item">
+                                        <span class="horario-icon">⏰</span>
+                                        <span class="horario-label">Salida:</span>
+                                        <span class="horario-value">${horaInicio}</span>
+                                    </div>
+                                ` : ''}
+                                ${horaLlegada ? `
+                                    <div class="horario-item">
+                                        <span class="horario-icon">🏁</span>
+                                        <span class="horario-label">Llegada:</span>
+                                        <span class="horario-value">${horaLlegada}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : `
+                            <div class="bus-horario">
+                                <div class="horario-item">
+                                    <span class="horario-icon">⏰</span>
+                                    <span class="sin-horario">Sin horarios definidos</span>
+                                </div>
+                            </div>
+                        `}
+                        
+                        <div class="bus-info">
+                            <div class="info-item">
+                                <span class="info-icon">👥</span>
+                                <span><strong>Capacidad:</strong> ${bus.capacidad} pasajeros</span>
+                            </div>
+                            
+                            ${bus.conductor ? `
+                                <div class="info-item">
+                                    <span class="info-icon">👨‍✈️</span>
+                                    <span><strong>Conductor:</strong> ${bus.conductor.nombre}</span>
+                                </div>
+                            ` : `
+                                <div class="info-item">
+                                    <span class="info-icon">⚠️</span>
+                                    <span><strong>Conductor:</strong> Sin asignar</span>
+                                </div>
+                            `}
+                            
+                            ${bus.ruta ? `
+                                <div class="info-item">
+                                    <span class="info-icon">🗺️</span>
+                                    <span><strong>Ruta:</strong> ${bus.ruta.nombre}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-icon">📍</span>
+                                    <span>${bus.ruta.origen} → ${bus.ruta.destino}</span>
+                                </div>
+                            ` : `
+                                <div class="info-item">
+                                    <span class="info-icon">⚠️</span>
+                                    <span><strong>Ruta:</strong> Sin asignar</span>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filtrarBuses() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const busesFiltrados = busesData.filter(bus => {
+                const placa = bus.placa.toLowerCase();
+                const modelo = bus.modelo.toLowerCase();
+                const ruta = bus.ruta ? bus.ruta.nombre.toLowerCase() : '';
+                
+                return placa.includes(searchTerm) || 
+                       modelo.includes(searchTerm) || 
+                       ruta.includes(searchTerm);
+            });
+            
+            const grid = document.getElementById('busesGrid');
+            const noData = document.getElementById('noData');
+            
+            if (busesFiltrados.length === 0) {
+                grid.style.display = 'none';
+                noData.style.display = 'block';
+                noData.innerHTML = `
+                    <div class="no-data-icon">🔍</div>
+                    <h3>No se encontraron resultados</h3>
+                    <p>Intenta con otro término de búsqueda</p>
+                `;
+            } else {
+                grid.style.display = 'grid';
+                noData.style.display = 'none';
+                renderizarBuses(busesFiltrados);
+            }
+        }
+
+        function volverDashboard() {
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            window.location.href = `/dashboard/${usuario.rol}`;
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('usuario');
+                window.location.href = '/auth';
+            }
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado:', registration);
+                    })
+                    .catch(error => {
+                        console.log('❌ Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

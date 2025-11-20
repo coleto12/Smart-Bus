@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SmartBus">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- Iconos -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    <link rel="apple-touch-icon" href="/static/icon-512.png">
+    <title>Gestión de Usuarios - SmartBus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .logo h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #5a6268;
+        }
+        
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background: #c82333;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .panel-header h2 {
+            color: #333;
+            font-size: 28px;
+        }
+        
+        .btn-add {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-add:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        /* Tabla */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-admin {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .badge-conductor {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .badge-pasajero {
+            background: #28a745;
+            color: white;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-edit, .btn-delete {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .btn-edit {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #0056b3;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+        
+        .btn-save {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .btn-save:hover {
+            background: #218838;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .password-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo" onclick="volverDashboard()">
+            <span>👥</span>
+            <h1>SmartBus</h1>
+        </div>
+        <div class="header-buttons">
+            <button class="btn btn-back" onclick="volverDashboard()">← Volver al Dashboard</button>
+            <button class="btn btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">
+                <h2>👥 Gestión de Usuarios</h2>
+                <button class="btn-add" onclick="abrirModalAgregar()">
+                    <span>➕</span> Agregar Usuario
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div id="loading" class="loading">
+                    <p>Cargando usuarios...</p>
+                </div>
+                <table id="tablaUsuarios" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-usuarios">
+                        <!-- Datos dinámicos -->
+                    </tbody>
+                </table>
+                <div id="noData" class="no-data" style="display: none;">
+                    <p>No hay usuarios registrados.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar/Editar -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Agregar Usuario</h3>
+                <button class="close-modal" onclick="cerrarModal()">×</button>
+            </div>
+            
+            <form id="formUsuario">
+                <input type="hidden" id="usuarioId">
+                
+                <div class="form-group">
+                    <label for="nombre">Nombre completo *</label>
+                    <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="correo">Correo electrónico *</label>
+                    <input type="email" id="correo" placeholder="Ej: juan@ejemplo.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rol">Rol *</label>
+                    <select id="rol" required>
+                        <option value="">Selecciona un rol</option>
+                        <option value="pasajero">Pasajero</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contraseña" id="labelContraseña">Contraseña *</label>
+                    <input type="password" id="contraseña" placeholder="Mínimo 6 caracteres">
+                    <p class="password-hint" id="passwordHint">
+                        Mínimo 6 caracteres
+                    </p>
+                </div>
+                
+                <div class="form-buttons">
+                    <button type="button" class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn-save" id="btnGuardar">Crear Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://192.168.1.8:8000';
+        let editandoUsuarioId = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verificarAutenticacion();
+            cargarUsuarios();
+        });
+
+        function verificarAutenticacion() {
+            const token = localStorage.getItem('access_token');
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            
+            if (!token || (usuario.rol !== 'admin' && usuario.rol !== 'administrador')) {
+                alert('No tienes permisos para acceder a esta página');
+                window.location.href = '/auth';
+            }
+        }
+
+        async function cargarUsuarios() {
+            const loading = document.getElementById('loading');
+            const tabla = document.getElementById('tablaUsuarios');
+            const noData = document.getElementById('noData');
+            const tbody = document.getElementById('tbody-usuarios');
+            
+            try {
+                const response = await fetch(`${API_URL}/usuarios/`);
+                const usuarios = await response.json();
+                
+                loading.style.display = 'none';
+                
+                if (usuarios.length === 0) {
+                    noData.style.display = 'block';
+                    tabla.style.display = 'none';
+                } else {
+                    noData.style.display = 'none';
+                    tabla.style.display = 'table';
+                    
+                    tbody.innerHTML = usuarios.map(usuario => {
+                        let badgeClass = '';
+                        let rolTexto = '';
+                        
+                        if (usuario.rol === 'administrador') {
+                            badgeClass = 'badge-admin';
+                            rolTexto = '👑 Administrador';
+                        } else if (usuario.rol === 'conductor') {
+                            badgeClass = 'badge-conductor';
+                            rolTexto = '👨‍✈️ Conductor';
+                        } else {
+                            badgeClass = 'badge-pasajero';
+                            rolTexto = '👤 Pasajero';
+                        }
+                        
+                        return `
+                            <tr>
+                                <td>${usuario.id}</td>
+                                <td><strong>${usuario.nombre}</strong></td>
+                                <td>${usuario.correo}</td>
+                                <td><span class="badge ${badgeClass}">${rolTexto}</span></td>
+                                <td class="actions">
+                                    <button class="btn-edit" onclick="editarUsuario(${usuario.id})">✏️ Editar</button>
+                                    <button class="btn-delete" onclick="eliminarUsuario(${usuario.id}, '${usuario.nombre}')">🗑️ Eliminar</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar usuarios:', error);
+                loading.innerHTML = '<p style="color: red;">Error al cargar los usuarios</p>';
+            }
+        }
+
+        function abrirModalAgregar() {
+            editandoUsuarioId = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Usuario';
+            document.getElementById('btnGuardar').textContent = 'Crear Usuario';
+            document.getElementById('labelContraseña').textContent = 'Contraseña *';
+            document.getElementById('contraseña').required = true;
+            document.getElementById('passwordHint').textContent = 'Mínimo 6 caracteres';
+            document.getElementById('formUsuario').reset();
+            document.getElementById('usuarioId').value = '';
+            document.getElementById('modal').classList.add('active');
+        }
+
+        async function editarUsuario(id) {
+            try {
+                const response = await fetch(`${API_URL}/usuarios/${id}`);
+                const usuario = await response.json();
+                
+                // ✅ Validar que no sea conductor
+                if (usuario.rol === 'conductor') {
+                    alert('Los conductores solo pueden editarse desde el módulo de gestión de conductores.');
+                    return;
+                }
+                
+                editandoUsuarioId = id;
+                document.getElementById('modalTitle').textContent = 'Editar Usuario';
+                document.getElementById('btnGuardar').textContent = 'Actualizar Usuario';
+                document.getElementById('labelContraseña').textContent = 'Contraseña (dejar vacío para no cambiar)';
+                document.getElementById('contraseña').required = false;
+                document.getElementById('passwordHint').textContent = 'Dejar vacío si no deseas cambiar la contraseña';
+                
+                document.getElementById('usuarioId').value = usuario.id;
+                document.getElementById('nombre').value = usuario.nombre;
+                document.getElementById('correo').value = usuario.correo;
+                document.getElementById('rol').value = usuario.rol;
+                document.getElementById('contraseña').value = '';
+                
+                document.getElementById('modal').classList.add('active');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar el usuario');
+            }
+        }
+        function cerrarModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.getElementById('formUsuario').reset();
+            editandoUsuarioId = null;
+        }
+
+        document.getElementById('formUsuario').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('nombre', document.getElementById('nombre').value);
+            formData.append('correo', document.getElementById('correo').value);
+            formData.append('rol', document.getElementById('rol').value);
+            
+            const contraseña = document.getElementById('contraseña').value;
+            if (contraseña) {
+                formData.append('contraseña', contraseña);
+            }
+            
+            try {
+                let response;
+                
+                if (editandoUsuarioId) {
+                    // Actualizar usuario existente
+                    response = await fetch(`${API_URL}/usuarios/${editandoUsuarioId}`, {
+                        method: 'PUT',
+                        body: formData
+                    });
+                } else {
+                    // Crear nuevo usuario
+                    if (!contraseña) {
+                        alert('La contraseña es obligatoria para crear un usuario');
+                        return;
+                    }
+                    response = await fetch(`${API_URL}/usuarios/`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                }
+                
+                if (response.ok) {
+                    const resultado = await response.json();
+                    alert(resultado.mensaje || 'Operación exitosa');
+                    cerrarModal();
+                    cargarUsuarios();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'No se pudo realizar la operación'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            }
+        });
+        async function eliminarUsuario(id, nombre) {
+            try {
+                // ✅ Primero verificar que no sea conductor
+                const checkResponse = await fetch(`${API_URL}/usuarios/${id}`);
+                const usuario = await checkResponse.json();
+                
+                if (usuario.rol === 'conductor') {
+                    alert('Los conductores solo pueden eliminarse desde el módulo de gestión de conductores.');
+                    return;
+                }
+                
+                if (!confirm(`¿Estás seguro de eliminar al usuario "${nombre}"?\n\nEsta acción no se puede deshacer.`)) {
+                    return;
+                }
+                
+                const response = await fetch(`${API_URL}/usuarios/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Usuario eliminado exitosamente');
+                    cargarUsuarios();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'No se pudo eliminar el usuario'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar el usuario');
+            }
+        }
+        function volverDashboard() {
+            window.location.href = '/dashboard/admin';
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('usuario');
+                window.location.href = '/auth';
+            }
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado:', registration);
+                    })
+                    .catch(error => {
+                        console.log('❌ Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
