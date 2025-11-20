@@ -17,13 +17,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ========== CAMBIOS AQUÍ ==========
 # Obtener rutas absolutas
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # ← CAMBIO: Subir un nivel más
+STATIC_DIR = os.path.join(BASE_DIR, "backend", "static")  # ← CAMBIO: Agregar "backend"
+TEMPLATES_DIR = os.path.join(BASE_DIR, "frontend")  # ← CAMBIO: Cambiar "templates" por "frontend"
+
 # Debug
+print(f"📁 BASE_DIR: {BASE_DIR}")
 print(f"📁 Archivos estáticos: {STATIC_DIR}")
-print(f"📁 ¿Existe? {os.path.exists(STATIC_DIR)}")
+print(f"📁 Templates (frontend): {TEMPLATES_DIR}")
+print(f"📁 ¿Existe static? {os.path.exists(STATIC_DIR)}")
+print(f"📁 ¿Existe frontend? {os.path.exists(TEMPLATES_DIR)}")
+# ==================================
 
 # Archivos estáticos y templates
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
