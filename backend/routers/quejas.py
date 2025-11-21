@@ -11,9 +11,27 @@ router = APIRouter(
 
 @router.get("/")
 def obtener_todas_quejas(db: Session = Depends(get_db)):
-    """Obtiene todas las quejas (para admin)"""
+    """Obtiene todas las quejas (para admin) con datos del usuario"""
     quejas = db.query(Queja).order_by(Queja.fecha.desc()).all()
-    return quejas
+    
+    resultado = []
+    for queja in quejas:
+        usuario = db.query(Usuario).filter(Usuario.id == queja.id_usuario).first()
+        
+        resultado.append({
+            "id": queja.id,
+            "id_usuario": queja.id_usuario,
+            "descripcion": queja.descripcion,
+            "fecha": queja.fecha.isoformat() if queja.fecha else None,
+            "leida": queja.leida,
+            "usuario": {
+                "id": usuario.id,
+                "nombre": usuario.nombre,
+                "correo": usuario.correo
+            } if usuario else None
+        })
+    
+    return resultado
 
 @router.get("/usuario/{usuario_id}")
 def obtener_quejas_usuario(usuario_id: int, db: Session = Depends(get_db)):
@@ -21,7 +39,25 @@ def obtener_quejas_usuario(usuario_id: int, db: Session = Depends(get_db)):
     quejas = db.query(Queja).filter(
         Queja.id_usuario == usuario_id
     ).order_by(Queja.fecha.desc()).all()
-    return quejas
+    
+    resultado = []
+    for queja in quejas:
+        usuario = db.query(Usuario).filter(Usuario.id == queja.id_usuario).first()
+        
+        resultado.append({
+            "id": queja.id,
+            "id_usuario": queja.id_usuario,
+            "descripcion": queja.descripcion,
+            "fecha": queja.fecha.isoformat() if queja.fecha else None,
+            "leida": queja.leida,
+            "usuario": {
+                "id": usuario.id,
+                "nombre": usuario.nombre,
+                "correo": usuario.correo
+            } if usuario else None
+        })
+    
+    return resultado
 
 @router.post("/")
 def crear_queja(
