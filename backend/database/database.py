@@ -8,7 +8,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Si no existe, usar la de Supabase como fallback
 if not DATABASE_URL:
-    DATABASE_URL = "postgresql://postgres.hgsxcrndzebldtkhhnca:c1e23m4e5aws-1-us-east-1.pooler.supabase.com:6543/postgres"
+    DATABASE_URL = "postgresql://postgres.hgsxcrndzebldtkhhnca:c1e2m3m4e5@aws-1-us-east-1.pooler.supabase.com:6543/postgres"
     print("⚠️ Usando DATABASE_URL por defecto (Supabase)")
 else:
     print(f"✅ Usando DATABASE_URL de variable de entorno")
