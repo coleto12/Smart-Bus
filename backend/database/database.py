@@ -1,29 +1,38 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import Session
+import os
 
-# Supabase connection (Render requires SSL)
-DATABASE_URL = (
-    "postgresql+psycopg2://postgres:c1e2m3m4e5@db.hgsxcrndzebldtkhhnca.supabase.co:5432/postgres?sslmode=require"
-)
+# Leer DATABASE_URL desde variable de entorno
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Create engine
+# Si no existe, usar la de Supabase como fallback
+if not DATABASE_URL:
+    DATABASE_URL = "postgresql://postgres:c1e2m3m4e5@db.hgsxcrndzebldtkhhnca.supabase.co:5432/postgres"
+    print("⚠️ Usando DATABASE_URL por defecto (Supabase)")
+else:
+    print(f"✅ Usando DATABASE_URL de variable de entorno")
+
+# Render usa postgres:// pero SQLAlchemy necesita postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Crear motor
 engine = create_engine(
     DATABASE_URL,
-    echo=False  # Set to True only if debugging
+    echo=True,
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 
-# Session
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine
 )
 
-# Base
 Base = declarative_base()
 
-
-# Dependency for FastAPI routes
 def get_db():
     db: Session = SessionLocal()
     try:
