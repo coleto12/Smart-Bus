@@ -405,12 +405,35 @@
             `).join('');
         }
 
-        async function cargarEstadisticas() {
-            // TODO: Implementar llamadas al backend
-            document.getElementById('busesActivos').textContent = '12';
-            document.getElementById('rutasDisponibles').textContent = '8';
-            document.getElementById('incidentesActivos').textContent = '2';
-        }
+async function cargarEstadisticas() {
+    const API_URL = 'http://127.0.0.1:8000';
+    
+    try {
+        // Contar buses activos
+        const busesResponse = await fetch(`${API_URL}/buses/`);
+        const buses = await busesResponse.json();
+        const busesActivos = buses.filter(b => b.estado === true).length;
+        document.getElementById('busesActivos').textContent = busesActivos;
+        
+        // Contar rutas disponibles
+        const rutasResponse = await fetch(`${API_URL}/rutas/`);
+        const rutas = await rutasResponse.json();
+        document.getElementById('rutasDisponibles').textContent = rutas.length;
+        
+        // Contar incidentes activos
+        const incidentesResponse = await fetch(`${API_URL}/incidentes/`);
+        const incidentes = await incidentesResponse.json();
+        // Los incidentes vienen como activos por defecto en el endpoint
+        document.getElementById('incidentesActivos').textContent = incidentes.length;
+        
+    } catch (error) {
+        console.error('Error al cargar estadísticas:', error);
+        // Si hay error, mostrar 0
+        document.getElementById('busesActivos').textContent = '0';
+        document.getElementById('rutasDisponibles').textContent = '0';
+        document.getElementById('incidentesActivos').textContent = '0';
+    }
+}
 
         function navegarA(url) {
             window.location.href = url;
