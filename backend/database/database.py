@@ -1,28 +1,29 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-
-# Supabase connection
+# Supabase connection (Render requires SSL)
 DATABASE_URL = (
-    "postgresql://postgres:c1e2m3m4e5@db.hgsxcrndzebldtkhhnca.supabase.co:5432/postgres"
+    "postgresql+psycopg2://postgres:c1e2m3m4e5@db.hgsxcrndzebldtkhhnca.supabase.co:5432/postgres?sslmode=require"
 )
 
-# Crear motor y sesión
+# Create engine
 engine = create_engine(
     DATABASE_URL,
-    echo=True  # Muestra consultas SQL en consola (opcional)
+    echo=False  # Set to True only if debugging
 )
 
+# Session
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine
 )
 
+# Base
 Base = declarative_base()
 
-# Función para obtener la sesión en las rutas de FastAPI
+
+# Dependency for FastAPI routes
 def get_db():
     db: Session = SessionLocal()
     try:
