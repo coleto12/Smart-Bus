@@ -103,16 +103,16 @@ def crear_queja(
 
 @router.put("/{queja_id}/marcar-leida")
 def marcar_queja_leida(queja_id: int, db: Session = Depends(get_db)):
-    """Marca una queja como leída (para admin)"""
+    """Marca una queja como leída y la elimina automáticamente"""
     queja = db.query(Queja).filter(Queja.id == queja_id).first()
+
     if not queja:
         raise HTTPException(status_code=404, detail="Queja no encontrada")
-    
-    queja.leida = True
+
+    db.delete(queja)
     db.commit()
-    db.refresh(queja)
-    
-    return {"mensaje": "Queja marcada como leída"}
+
+    return {"mensaje": "Queja marcada como leída y eliminada"}
 
 @router.delete("/{queja_id}")
 def eliminar_queja(queja_id: int, db: Session = Depends(get_db)):
