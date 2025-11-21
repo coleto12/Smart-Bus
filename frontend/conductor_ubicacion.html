@@ -1,33 +1,23 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SmartBus">
     
-    <!-- Manifest -->
     <link rel="manifest" href="/static/manifest.json">
-    
-    <!-- Iconos -->
     <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
     <link rel="apple-touch-icon" href="/static/icon-512.png">
     <title>Mi Ubicación - SmartBus</title>
     
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -44,101 +34,43 @@
             align-items: center;
         }
         
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
+        .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .logo h1 { color: #667eea; font-size: 28px; }
         
-        .logo h1 {
-            color: #667eea;
-            font-size: 28px;
-        }
-        
-        .header-buttons {
-            display: flex;
-            gap: 15px;
-        }
+        .header-buttons { display: flex; gap: 15px; }
         
         .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
+            padding: 10px 20px; border: none; border-radius: 8px;
+            cursor: pointer; font-size: 14px; transition: all 0.3s;
         }
         
-        .btn-back {
-            background: #6c757d;
-            color: white;
-        }
+        .btn-back { background: #6c757d; color: white; }
+        .btn-back:hover { background: #5a6268; }
+        .btn-logout { background: #dc3545; color: white; }
+        .btn-logout:hover { background: #c82333; }
         
-        .btn-back:hover {
-            background: #5a6268;
-        }
-        
-        .btn-logout {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .btn-logout:hover {
-            background: #c82333;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
         
         .panel {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            background: white; border-radius: 15px; padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 20px;
         }
         
-        .panel-header {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .panel-header h2 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .panel-header p {
-            color: #666;
-            font-size: 14px;
-        }
+        .panel-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+        .panel-header h2 { color: #333; font-size: 24px; margin-bottom: 10px; }
+        .panel-header p { color: #666; font-size: 14px; }
 
         .status-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            padding: 30px;
-            color: white;
-            margin-bottom: 30px;
-            text-align: center;
+            border-radius: 15px; padding: 30px; color: white;
+            margin-bottom: 30px; text-align: center;
         }
 
-        .status-card.activo {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        }
-
-        .status-card.inactivo {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-        }
+        .status-card.activo { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+        .status-card.inactivo { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); }
 
         .status-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
+            font-size: 80px; margin-bottom: 20px;
             animation: pulse 2s infinite;
         }
 
@@ -147,150 +79,71 @@
             50% { transform: scale(1.1); }
         }
 
-        .status-text {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .status-description {
-            font-size: 16px;
-            opacity: 0.9;
-        }
+        .status-text { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+        .status-description { font-size: 16px; opacity: 0.9; }
 
         .control-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
-            flex-wrap: wrap;
+            display: flex; gap: 15px; justify-content: center;
+            margin-top: 20px; flex-wrap: wrap;
         }
 
         .btn-control {
-            padding: 15px 40px;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            padding: 15px 40px; border: none; border-radius: 10px;
+            font-size: 18px; font-weight: bold; cursor: pointer;
+            transition: all 0.3s; display: flex; align-items: center; gap: 10px;
         }
 
-        .btn-activar {
-            background: #28a745;
-            color: white;
-        }
-
+        .btn-activar { background: #28a745; color: white; }
         .btn-activar:hover {
-            background: #218838;
-            transform: translateY(-3px);
+            background: #218838; transform: translateY(-3px);
             box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
         }
 
-        .btn-desactivar {
-            background: #dc3545;
-            color: white;
-        }
-
+        .btn-desactivar { background: #dc3545; color: white; }
         .btn-desactivar:hover {
-            background: #c82333;
-            transform: translateY(-3px);
+            background: #c82333; transform: translateY(-3px);
             box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
         }
 
-        .btn-control:disabled {
-            background: #999;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-control:disabled { background: #999; cursor: not-allowed; transform: none; }
 
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            gap: 20px; margin-top: 20px;
         }
 
         .info-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
+            background: #f8f9fa; padding: 20px; border-radius: 10px;
             border-left: 4px solid #667eea;
         }
 
-        .info-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .info-value {
-            font-size: 20px;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .info-value.coordenada {
-            font-family: monospace;
-            font-size: 16px;
-        }
+        .info-label { font-size: 14px; color: #666; margin-bottom: 8px; font-weight: 600; }
+        .info-value { font-size: 20px; color: #333; font-weight: bold; }
+        .info-value.coordenada { font-family: monospace; font-size: 16px; }
 
         #map {
-            width: 100%;
-            height: 500px;
-            border-radius: 10px;
+            width: 100%; height: 500px; border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+            padding: 15px 20px; border-radius: 10px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 15px;
         }
 
         .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
+            background: #d1ecf1; color: #0c5460;
             border: 1px solid #bee5eb;
         }
 
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffc107;
-        }
+        .alert-icon { font-size: 24px; }
 
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-icon {
-            font-size: 24px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #667eea;
-        }
-
+        .loading { text-align: center; padding: 40px; color: #667eea; }
         .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            border: 4px solid #f3f3f3; border-top: 4px solid #667eea;
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite; margin: 0 auto 20px;
         }
 
         @keyframes spin {
@@ -299,18 +152,11 @@
         }
 
         .update-indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(40, 167, 69, 0.95);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 25px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            display: none;
-            align-items: center;
-            gap: 10px;
-            z-index: 1000;
+            position: fixed; bottom: 20px; right: 20px;
+            background: rgba(40, 167, 69, 0.95); color: white;
+            padding: 12px 20px; border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none;
+            align-items: center; gap: 10px; z-index: 1000;
             animation: slideIn 0.3s ease;
         }
 
@@ -319,17 +165,24 @@
             to { transform: translateX(0); }
         }
 
-        .update-indicator.show {
-            display: flex;
+        .update-indicator.show { display: flex; }
+        .pulse-dot {
+            width: 12px; height: 12px; background: white;
+            border-radius: 50%; animation: pulse 1.5s infinite;
         }
 
-        .pulse-dot {
-            width: 12px;
-            height: 12px;
-            background: white;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
+        /* ✅ NUEVO: Indicador de calidad GPS */
+        .gps-quality {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
         }
+        .gps-quality.excelente { background: #28a745; color: white; }
+        .gps-quality.buena { background: #ffc107; color: #000; }
+        .gps-quality.mala { background: #dc3545; color: white; }
     </style>
 </head>
 <body>
@@ -351,7 +204,6 @@
         </div>
 
         <div id="content" style="display: none;">
-            <!-- Estado actual -->
             <div class="status-card" id="statusCard">
                 <div class="status-icon" id="statusIcon">📍</div>
                 <div class="status-text" id="statusText">Ubicación Inactiva</div>
@@ -367,7 +219,6 @@
                 </div>
             </div>
 
-            <!-- Información de ubicación -->
             <div class="panel">
                 <div class="panel-header">
                     <h2>📊 Información de Ubicación</h2>
@@ -387,17 +238,16 @@
                         <div class="info-value coordenada" id="longitudTexto">---</div>
                     </div>
                     <div class="info-card">
-                        <div class="info-label">Última Actualización</div>
-                        <div class="info-value" id="ultimaActualizacion" style="font-size: 14px;">---</div>
+                        <div class="info-label">Precisión GPS <span id="gpsQuality"></span></div>
+                        <div class="info-value" id="precisionTexto" style="font-size: 14px;">---</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Mapa -->
             <div class="panel">
                 <div class="panel-header">
                     <h2>🗺️ Tu Ubicación en el Mapa</h2>
-                    <p>Tu ubicación se actualiza automáticamente cada 15 segundos</p>
+                    <p>Tu ubicación se filtra y actualiza solo cuando te mueves significativamente</p>
                 </div>
                 <div id="map"></div>
             </div>
@@ -405,56 +255,53 @@
             <div class="alert alert-info">
                 <span class="alert-icon">💡</span>
                 <div>
-                    <strong>¿Cómo funciona?</strong><br>
-                    Cuando activas tu ubicación, los pasajeros podrán ver en tiempo real dónde está tu bus. 
-                    La ubicación se actualiza automáticamente cada 15 segundos mientras esté activa.
+                    <strong>Sistema de filtrado inteligente activo:</strong><br>
+                    • Solo se envían ubicaciones con precisión ±50m o mejor<br>
+                    • Se ignoran saltos imposibles (GPS inestable)<br>
+                    • Actualización cada 10 metros de movimiento real
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Indicador de actualización -->
     <div class="update-indicator" id="updateIndicator">
         <div class="pulse-dot"></div>
         <span>Ubicación actualizada</span>
     </div>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
-        const API_URL = window.location.origin;  // ✅ Solución;
-        let map;
-        let miMarcador = null;
-        let ubicacionActiva = false;
-        let intervaloActualizacion = null;
-        let watchId = null;
-        let conductorId = null;
+        const API_URL = window.location.origin;
+        let map, miMarcador = null, ubicacionActiva = false;
+        let watchId = null, conductorId = null;
+        let ultimaUbicacion = null, ultimoEnvio = 0;
 
-        const COLOMBIA_BOUNDS = [
-            [-4.5, -79.0],
-            [13.5, -66.8]
-        ];
+        // ✅ CONFIGURACIÓN DE FILTRADO
+        const CONFIG = {
+            PRECISION_MINIMA: 50,
+            DISTANCIA_MINIMA: 10,
+            INTERVALO_MINIMO: 5000,
+            MAX_VELOCIDAD: 200,
+        };
+
+        const COLOMBIA_BOUNDS = [[-4.5, -79.0], [13.5, -66.8]];
 
         window.addEventListener('DOMContentLoaded', () => {
             verificarAutenticacion();
-    
-    // PRIMERO mostrar el contenido
-    document.getElementById('content').style.display = 'block';
-    
-    // LUEGO inicializar el mapa (cuando ya es visible)
-    setTimeout(() => {
-        inicializarMapa();
-        cargarEstadoInicial();
-    }, 100);
-});
+            document.getElementById('content').style.display = 'block';
+            setTimeout(() => {
+                inicializarMapa();
+                cargarEstadoInicial();
+            }, 100);
+        });
 
         function verificarAutenticacion() {
             const token = localStorage.getItem('access_token');
             const usuarioStr = localStorage.getItem('usuario');
             
             if (!token) {
-                alert('No autenticado. Redirigiendo...');
+                alert('No autenticado');
                 window.location.href = '/auth';
                 return;
             }
@@ -466,23 +313,16 @@
                 console.error('Error al parsear usuario:', e);
             }
             
-            console.log('Usuario desde localStorage:', usuario);
-            
             if (usuario.rol !== 'conductor') {
-                alert('No tienes permisos para acceder a esta página');
+                alert('No tienes permisos');
                 window.location.href = '/auth';
                 return;
             }
 
-            // CORREGIDO: Obtener conductor_id correctamente
-            conductorId = usuario.id;  // El ID del usuario es el que necesitas
-            
-            console.log('Conductor ID obtenido:', conductorId);
-            
-            if (!conductorId || conductorId === undefined) {
-                alert('Error: No se encontró tu ID de conductor');
+            conductorId = usuario.id;
+            if (!conductorId) {
+                alert('Error: No se encontró tu ID');
                 window.location.href = '/dashboard/conductor';
-                return;
             }
         }
 
@@ -497,42 +337,95 @@
             });
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
+                attribution: '© OpenStreetMap',
                 maxZoom: 19
             }).addTo(map);
+        }
+
+        // ✅ CALCULAR DISTANCIA
+        function calcularDistancia(lat1, lng1, lat2, lng2) {
+            const R = 6371e3;
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lng2 - lng1) * Math.PI / 180;
+
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            return R * c;
+        }
+
+        // ✅ VALIDAR UBICACIÓN
+        function esUbicacionValida(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            
+            // 1. Verificar precisión
+            if (accuracy > CONFIG.PRECISION_MINIMA) {
+                console.warn(`⚠️ Precisión baja: ±${accuracy.toFixed(0)}m`);
+                return false;
+            }
+            
+            // 2. Verificar Colombia
+            if (lat < -4.5 || lat > 13.5 || lng < -79.0 || lng > -66.8) {
+                console.warn(`⚠️ Fuera de Colombia`);
+                return false;
+            }
+            
+            // 3. Verificar movimiento razonable
+            if (ultimaUbicacion) {
+                const distancia = calcularDistancia(
+                    ultimaUbicacion.lat, ultimaUbicacion.lng, lat, lng
+                );
+                
+                const tiempo = (Date.now() - ultimaUbicacion.timestamp) / 1000;
+                const velocidad = (distancia / tiempo) * 3.6;
+                
+                if (velocidad > CONFIG.MAX_VELOCIDAD) {
+                    console.warn(`⚠️ Velocidad imposible: ${velocidad.toFixed(0)} km/h`);
+                    return false;
+                }
+                
+                if (distancia < CONFIG.DISTANCIA_MINIMA) {
+                    console.log(`📍 Movimiento pequeño: ${distancia.toFixed(1)}m`);
+                    return false;
+                }
+            }
+            
+            // 4. Verificar intervalo
+            const tiempoDesdeUltimoEnvio = Date.now() - ultimoEnvio;
+            if (tiempoDesdeUltimoEnvio < CONFIG.INTERVALO_MINIMO) {
+                return false;
+            }
+            
+            return true;
         }
 
         async function cargarEstadoInicial() {
             document.getElementById('loading').style.display = 'block';
             
             try {
-                console.log(`Llamando a: ${API_URL}/ubicaciones/mi-ubicacion/${conductorId}`);
-                
                 const response = await fetch(`${API_URL}/ubicaciones/mi-ubicacion/${conductorId}`);
                 
                 if (response.status === 404) {
-                    console.log('No hay ubicación registrada aún');
                     actualizarUI(false);
                 } else if (response.ok) {
                     const data = await response.json();
-                    console.log('Datos de ubicación:', data);
-                    
                     if (data.activo) {
                         ubicacionActiva = true;
-                        actualizarUI(true, data.latitud, data.longitud);
+                        actualizarUI(true, data.latitud, data.longitud, 0);
                         actualizarMarcador(data.latitud, data.longitud);
-                        iniciarActualizacionAutomatica();
+                        iniciarSeguimiento();
                     } else {
                         actualizarUI(false);
                     }
-                } else {
-                    const error = await response.json();
-                    console.error('Error:', error);
-                    actualizarUI(false);
                 }
-                
             } catch (error) {
-                console.error('Error al cargar estado:', error);
+                console.error('Error:', error);
                 actualizarUI(false);
             } finally {
                 document.getElementById('loading').style.display = 'none';
@@ -541,7 +434,7 @@
             }
         }
 
-        function actualizarUI(activo, lat = null, lng = null) {
+        function actualizarUI(activo, lat = null, lng = null, accuracy = 0) {
             const statusCard = document.getElementById('statusCard');
             const statusIcon = document.getElementById('statusIcon');
             const statusText = document.getElementById('statusText');
@@ -551,12 +444,14 @@
             const estadoTexto = document.getElementById('estadoTexto');
             const latitudTexto = document.getElementById('latitudTexto');
             const longitudTexto = document.getElementById('longitudTexto');
+            const precisionTexto = document.getElementById('precisionTexto');
+            const gpsQuality = document.getElementById('gpsQuality');
 
             if (activo) {
                 statusCard.className = 'status-card activo';
                 statusIcon.textContent = '🟢';
                 statusText.textContent = 'Ubicación Activa';
-                statusDescription.textContent = 'Los pasajeros pueden ver tu ubicación en tiempo real';
+                statusDescription.textContent = 'Los pasajeros pueden verte';
                 btnActivar.style.display = 'none';
                 btnDesactivar.style.display = 'flex';
                 estadoTexto.textContent = 'Activo';
@@ -565,27 +460,36 @@
                 if (lat && lng) {
                     latitudTexto.textContent = lat.toFixed(6);
                     longitudTexto.textContent = lng.toFixed(6);
+                    
+                    if (accuracy > 0) {
+                        precisionTexto.textContent = `±${accuracy.toFixed(0)} metros`;
+                        
+                        // Calidad GPS
+                        let calidad = '';
+                        if (accuracy <= 20) {
+                            calidad = '<span class="gps-quality excelente">Excelente</span>';
+                        } else if (accuracy <= 50) {
+                            calidad = '<span class="gps-quality buena">Buena</span>';
+                        } else {
+                            calidad = '<span class="gps-quality mala">Baja</span>';
+                        }
+                        gpsQuality.innerHTML = calidad;
+                    }
                 }
             } else {
                 statusCard.className = 'status-card inactivo';
                 statusIcon.textContent = '📍';
                 statusText.textContent = 'Ubicación Inactiva';
-                statusDescription.textContent = 'Activa tu ubicación para que los pasajeros te encuentren';
+                statusDescription.textContent = 'Activa tu ubicación';
                 btnActivar.style.display = 'flex';
                 btnDesactivar.style.display = 'none';
                 estadoTexto.textContent = 'Inactivo';
                 estadoTexto.style.color = '#6c757d';
                 latitudTexto.textContent = '---';
                 longitudTexto.textContent = '---';
+                precisionTexto.textContent = '---';
+                gpsQuality.innerHTML = '';
             }
-
-            const ahora = new Date();
-            document.getElementById('ultimaActualizacion').textContent = 
-                ahora.toLocaleString('es-ES', { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit' 
-                });
         }
 
         function actualizarMarcador(lat, lng) {
@@ -602,7 +506,7 @@
 
             miMarcador = L.marker([lat, lng], { icon })
                 .addTo(map)
-                .bindPopup('<b>Tu ubicación actual</b><br>🚌 Bus en servicio');
+                .bindPopup('<b>Tu ubicación</b><br>🚌 Bus activo');
             
             map.setView([lat, lng], 14);
         }
@@ -610,14 +514,12 @@
         function mostrarIndicadorActualizacion() {
             const indicator = document.getElementById('updateIndicator');
             indicator.classList.add('show');
-            setTimeout(() => {
-                indicator.classList.remove('show');
-            }, 2000);
+            setTimeout(() => indicator.classList.remove('show'), 2000);
         }
 
         async function activarUbicacion() {
             if (!navigator.geolocation) {
-                alert('❌ Tu navegador no soporta geolocalización');
+                alert('❌ Tu navegador no soporta GPS');
                 return;
             }
 
@@ -630,9 +532,12 @@
                     async function(position) {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+
+                        console.log(`📍 Ubicación: ${lat}, ${lng} (±${accuracy}m)`);
 
                         if (lat < -4.5 || lat > 13.5 || lng < -79.0 || lng > -66.8) {
-                            alert('❌ Tu ubicación está fuera de Colombia');
+                            alert('❌ Fuera de Colombia');
                             btnActivar.disabled = false;
                             btnActivar.innerHTML = '<span>🟢</span> Activar Ubicación';
                             return;
@@ -650,20 +555,22 @@
 
                         if (response.ok) {
                             ubicacionActiva = true;
-                            actualizarUI(true, lat, lng);
+                            ultimaUbicacion = { lat, lng, timestamp: Date.now() };
+                            ultimoEnvio = Date.now();
+                            actualizarUI(true, lat, lng, accuracy);
                             actualizarMarcador(lat, lng);
-                            iniciarActualizacionAutomatica();
-                            alert('✅ Ubicación activada correctamente');
+                            iniciarSeguimiento();
+                            alert('✅ Ubicación activada');
                         } else {
                             const error = await response.json();
-                            alert('❌ Error: ' + (error.detail || 'No se pudo activar la ubicación'));
+                            alert('❌ Error: ' + (error.detail || 'No se pudo activar'));
                             btnActivar.disabled = false;
                             btnActivar.innerHTML = '<span>🟢</span> Activar Ubicación';
                         }
                     },
                     function(error) {
-                        console.error('Error de geolocalización:', error);
-                        alert('❌ No se pudo obtener tu ubicación. Verifica los permisos.');
+                        console.error('Error GPS:', error);
+                        alert('❌ No se pudo obtener ubicación');
                         btnActivar.disabled = false;
                         btnActivar.innerHTML = '<span>🟢</span> Activar Ubicación';
                     },
@@ -673,30 +580,32 @@
                         maximumAge: 0
                     }
                 );
-
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ Error al activar la ubicación');
+                alert('❌ Error al activar');
                 btnActivar.disabled = false;
                 btnActivar.innerHTML = '<span>🟢</span> Activar Ubicación';
             }
         }
 
-        function iniciarActualizacionAutomatica() {
-            if (intervaloActualizacion) {
-                clearInterval(intervaloActualizacion);
+        // ✅ SEGUIMIENTO CON FILTRADO
+        function iniciarSeguimiento() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
             }
 
-            if (navigator.geolocation) {
-                watchId = navigator.geolocation.watchPosition(
-                    async function(position) {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
+            watchId = navigator.geolocation.watchPosition(
+                async function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const accuracy = position.coords.accuracy;
 
-                        if (lat < -4.5 || lat > 13.5 || lng < -79.0 || lng > -66.8) {
-                            return;
-                        }
+                    console.log(`📡 Nueva ubicación: ${lat}, ${lng} (±${accuracy}m)`);
 
+                    // ✅ FILTRAR
+                    if (esUbicacionValida(position)) {
+                        console.log(`✅ Ubicación válida, enviando...`);
+                        
                         const formData = new FormData();
                         formData.append('id_usuario', conductorId);
                         formData.append('latitud', lat);
@@ -709,62 +618,32 @@
                             });
 
                             if (response.ok) {
-                                actualizarUI(true, lat, lng);
+                                ultimaUbicacion = { lat, lng, timestamp: Date.now() };
+                                ultimoEnvio = Date.now();
+                                actualizarUI(true, lat, lng, accuracy);
                                 actualizarMarcador(lat, lng);
                                 mostrarIndicadorActualizacion();
                             }
                         } catch (error) {
-                            console.error('Error al actualizar ubicación:', error);
+                            console.error('Error al enviar:', error);
                         }
-                    },
-                    function(error) {
-                        console.error('Error en watchPosition:', error);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 15000,
-                        maximumAge: 0
+                    } else {
+                        console.log(`❌ Ubicación descartada`);
                     }
-                );
-            }
-
-            intervaloActualizacion = setInterval(async () => {
-                if (!ubicacionActiva) {
-                    clearInterval(intervaloActualizacion);
-                    return;
+                },
+                function(error) {
+                    console.error('Error watchPosition:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
                 }
-
-                navigator.geolocation.getCurrentPosition(
-                    async function(position) {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-
-                        if (lat < -4.5 || lat > 13.5 || lng < -79.0 || lng > -66.8) {
-                            return;
-                        }
-
-                        const formData = new FormData();
-                        formData.append('id_usuario', conductorId);
-                        formData.append('latitud', lat);
-                        formData.append('longitud', lng);
-
-                        try {
-                            await fetch(`${API_URL}/ubicaciones/actualizar`, {
-                                method: 'POST',
-                                body: formData
-                            });
-                        } catch (error) {
-                            console.error('Error:', error);
-                        }
-                    },
-                    null,
-                    { enableHighAccuracy: true }
-                );
-            }, 15000);
+            );
         }
 
         async function desactivarUbicacion() {
-            if (!confirm('¿Estás seguro de desactivar tu ubicación?\n\nLos pasajeros no podrán ver dónde estás.')) {
+            if (!confirm('¿Desactivar ubicación?\n\nLos pasajeros no te verán.')) {
                 return;
             }
 
@@ -779,15 +658,12 @@
 
                 if (response.ok) {
                     ubicacionActiva = false;
+                    ultimaUbicacion = null;
+                    ultimoEnvio = 0;
                     
                     if (watchId) {
                         navigator.geolocation.clearWatch(watchId);
                         watchId = null;
-                    }
-                    
-                    if (intervaloActualizacion) {
-                        clearInterval(intervaloActualizacion);
-                        intervaloActualizacion = null;
                     }
 
                     if (miMarcador) {
@@ -796,9 +672,9 @@
                     }
 
                     actualizarUI(false);
-                    alert('✅ Ubicación desactivada correctamente');
+                    alert('✅ Ubicación desactivada');
                 } else {
-                    alert('❌ Error al desactivar la ubicación');
+                    alert('❌ Error al desactivar');
                     btnDesactivar.disabled = false;
                     btnDesactivar.innerHTML = '<span>🔴</span> Desactivar Ubicación';
                 }
@@ -811,22 +687,17 @@
         }
 
         function volverDashboard() {
-            if (ubicacionActiva && !confirm('Tu ubicación está activa. ¿Seguro que deseas salir?')) {
-                return;
-            }
+            if (ubicacionActiva && !confirm('Ubicación activa. ¿Salir?')) return;
             window.location.href = '/dashboard/conductor';
         }
 
         function logout() {
-            if (ubicacionActiva && !confirm('Tu ubicación está activa. Se desactivará al cerrar sesión. ¿Continuar?')) {
-                return;
-            }
+            if (ubicacionActiva && !confirm('Ubicación activa. Se desactivará. ¿Continuar?')) return;
             
-            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+            if (confirm('¿Cerrar sesión?')) {
                 if (ubicacionActiva) {
                     fetch(`${API_URL}/ubicaciones/desactivar/${conductorId}`, { method: 'POST' });
                 }
-                
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('usuario');
                 window.location.href = '/auth';
@@ -836,8 +707,7 @@
         window.addEventListener('beforeunload', function(e) {
             if (ubicacionActiva) {
                 e.preventDefault();
-                e.returnValue = '';
-            }
+                e.returnValue = '';}
         });
     </script>
     <script>
